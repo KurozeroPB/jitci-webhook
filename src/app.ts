@@ -41,14 +41,19 @@ async function main(): Promise<void> {
         const body = req.body as JitCIBody
         try {
             const details = await getHashDetails(body.commit);
+            if (!details) return res.status(500).json({
+                statusCode: 500,
+                statusMessage: "Internal Server Error",
+                message: "Oops, something bad happened"
+            });
             await client.send({
                 avatarURL: settings.avatar,
                 embeds: [
                     {
                         author: {
-                            name: details?.committer?.login,
-                            url: details?.committer?.html_url,
-                            icon_url: details?.committer?.avatar_url
+                            name: details.committer.login,
+                            url: details.committer.html_url,
+                            icon_url: details.committer.avatar_url
                         },
                         url: body.buildUrl,
                         color: body.state === "pass" ? settings.colors.pass : settings.colors.fail,
