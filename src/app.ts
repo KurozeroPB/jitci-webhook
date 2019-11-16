@@ -59,7 +59,7 @@ async function main(): Promise<void> {
                         color: body.state === "pass" ? settings.colors.pass : settings.colors.fail,
                         description: `Build: \`${body.state}\`\n` +
                             `Nr: \`${body.buildNr}\`\n` +
-                            `Commit: \`[${body.commit.substring(0, 6)}](${details.commit.url})\`\n` +
+                            `Commit: [${body.commit.substring(0, 6)}](${details.commit.url})\n` +
                             `Branch: \`${body.branch}\``
                     }
                 ]
