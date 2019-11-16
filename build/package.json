@@ -1,10 +1,11 @@
 {
     "name": "jitci-webhook",
     "version": "1.0.0",
-    "description": "Api that returns azur lane data",
-    "main": "src/server.ts",
+    "description": "Send JitCI webhook request to discord webhook",
+    "main": "build/src/app.js",
     "engines": {
-        "node": "12.x.x"
+        "node": ">=12",
+        "yarn": ">=1.19.1"
     },
     "homepage": "https://github.com/KurozeroPB/jitci-webhook#readme",
     "repository": {
@@ -30,7 +31,6 @@
         "postinstall": "yarn compile",
         "gcp-build": "yarn compile",
         "compile": "tsc -p .",
-        "deploy": "gcloud app deploy",
         "clean": "rm -rf ./node_modules && rm ./package-lock.json",
         "reinstall": "yarn clean && npm i"
     },

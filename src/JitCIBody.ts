@@ -1,4 +1,4 @@
-export interface IBody {
+export interface JitCIBody {
     buildUrl: string;
     state: string;
     buildNr: string;
