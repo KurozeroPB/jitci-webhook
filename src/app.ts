@@ -17,66 +17,78 @@ async function getHashDetails(hash: string): Promise<HashItem | undefined> {
     return response.data.items.length >= 1 ? response.data.items[0] : void 0;
 }
 
-async function main(): Promise<void> {
-    server.enable("trust proxy");
-    server.disable("x-powered-by");
+server.enable("trust proxy");
+server.disable("x-powered-by");
 
-    server.set("json spaces", 4);
-    server.set("env", settings.env);
+server.set("json spaces", 4);
+server.set("env", settings.env);
 
-    server.use(express.json());
+server.use(express.json());
 
-    server.post("/:id/:token", async (req, res) => {
-        const webhookId = req.params.id;
-        const webhookToken = req.params.token;
-        if (!webhookId || !webhookToken) {
-            return res.status(400).json({
-                statusCode: 400,
-                statusMessage: "Bad Request",
-                message: "Missing or invalid webhookId/webhookToken"
-            });
-        }
-
-        const client = new WebhookClient(webhookId, webhookToken);
-        const body = req.body as JitCIBody
-        try {
-            const details = await getHashDetails(body.commit);
-            if (!details) return res.status(500).json({
-                statusCode: 500,
-                statusMessage: "Internal Server Error",
-                message: "Oops, something bad happened"
-            });
-            await client.send({
-                avatarURL: settings.avatar,
-                embeds: [
-                    {
-                        author: {
-                            name: details.committer.login,
-                            url: details.committer.html_url,
-                            icon_url: details.committer.avatar_url
-                        },
-                        url: body.buildUrl,
-                        color: body.state === "pass" ? settings.colors.pass : settings.colors.fail,
-                        description: `Build: \`${body.state}\`\n` +
-                            `Nr: \`${body.buildNr}\`\n` +
-                            `Commit: [${body.commit.substring(0, 6)}](${details.commit.url})\n` +
-                            `Branch: \`${body.branch}\``
-                    }
-                ]
-            });
-            res.sendStatus(200);
-        } catch(error) {
-            res.status(500).json({
-                statusCode: 500,
-                statusMessage: "Internal Server Error",
-                message: error.message || "Oops, something bad happened"
-            });
-        }
+server.get("/", (_, res) => {
+    res.status(200).json({
+        statusCode: 200,
+        statusMessage: "OK",
+        message: "Welcome, this is an application to show JitCI's results in a discord webhook message. To use this add https://jitci.herokuapp.com/<discord-webhook-id>/<discord-webhook-token> to the JitCI settings."
     });
+});
 
-    server.listen(port, () => {
-        console.log(`Starting http server on port ${port}`);
+server.post("/:id/:token", async (req, res) => {
+    const webhookId = req.params.id;
+    const webhookToken = req.params.token;
+    if (!webhookId || !webhookToken) {
+        return res.status(400).json({
+            statusCode: 400,
+            statusMessage: "Bad Request",
+            message: "Missing or invalid webhookId/webhookToken"
+        });
+    }
+
+    const client = new WebhookClient(webhookId, webhookToken);
+    const body = req.body as JitCIBody
+    try {
+        const details = await getHashDetails(body.commit);
+        if (!details) return res.status(500).json({
+            statusCode: 500,
+            statusMessage: "Internal Server Error",
+            message: "Oops, something bad happened"
+        });
+        await client.send({
+            avatarURL: settings.avatar,
+            embeds: [
+                {
+                    author: {
+                        name: details.committer.login,
+                        url: details.committer.html_url,
+                        icon_url: details.committer.avatar_url
+                    },
+                    url: body.buildUrl,
+                    color: body.state === "pass" ? settings.colors.pass : settings.colors.fail,
+                    description: `Build: \`${body.state}\`\n` +
+                        `Nr: \`${body.buildNr}\`\n` +
+                        `Commit: [${body.commit.substring(0, 6)}](${details.commit.url})\n` +
+                        `Branch: \`${body.branch}\``
+                }
+            ]
+        });
+        res.sendStatus(200);
+    } catch (error) {
+        res.status(500).json({
+            statusCode: 500,
+            statusMessage: "Internal Server Error",
+            message: error.message || "Oops, something bad happened"
+        });
+    }
+});
+
+server.get("*", (_, res) => {
+    res.status(404).json({
+        statusCode: 404,
+        statusMessage: "Not Found",
+        message: "The page you are looking for does not exist"
     });
-}
+});
 
-main().catch(console.error);
+server.listen(port, () => {
+    console.log(`Starting http server on port ${port}`);
+});
