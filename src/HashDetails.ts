@@ -31,6 +31,7 @@ export interface HashItem {
             type: string;
             site_admin: boolean;
         };
+        html_url: string;
     };
 }
 

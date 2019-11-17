@@ -31,21 +31,21 @@
         "postinstall": "yarn compile",
         "gcp-build": "yarn compile",
         "compile": "tsc -p .",
-        "clean": "rm -rf ./node_modules && rm ./package-lock.json",
-        "reinstall": "yarn clean && npm i"
+        "clean": "rm -rf ./node_modules && rm ./yarn.lock",
+        "reinstall": "yarn clean && yarn install"
     },
     "dependencies": {
         "@types/express": "^4.17.2",
         "@types/node": "^12.12.7",
         "axios": "^0.19.0",
         "cross-env": "^6.0.3",
-        "discord.js": "^11.5.1",
+        "eris": "^0.11.0",
         "express": "^4.17.1"
     },
     "devDependencies": {
         "gts": "^1.1.0",
         "ts-node": "^8.5.2",
         "tsconfig-paths": "^3.9.0",
-        "typescript": "3.7.2"
+        "typescript": "next"
     }
 }

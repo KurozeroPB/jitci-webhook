@@ -1,12 +1,13 @@
 import express from "express";
 import settings from "./settings"
 import axios from "axios";
-import { WebhookClient } from "discord.js";
+import { Client } from "eris";
 import { JitCIBody } from "./JitCIBody";
 import { HashDetails, HashItem } from "./HashDetails";
 
 const server = express();
 const port = process.env.PORT || 8080;
+const client = new Client("");
 
 async function getHashDetails(hash: string): Promise<HashItem | undefined> {
     const response = await axios.get<HashDetails>(`https://api.github.com/search/commits?q=hash:${hash}`, {
@@ -44,7 +45,6 @@ server.post("/:id/:token", async (req, res) => {
         });
     }
 
-    const client = new WebhookClient(webhookId, webhookToken);
     const body = req.body as JitCIBody
     try {
         const details = await getHashDetails(body.commit);
@@ -53,7 +53,7 @@ server.post("/:id/:token", async (req, res) => {
             statusMessage: "Internal Server Error",
             message: "Oops, something bad happened"
         });
-        await client.send({
+        await client.executeWebhook(webhookId, webhookToken, {
             avatarURL: settings.avatar,
             embeds: [
                 {
@@ -62,12 +62,21 @@ server.post("/:id/:token", async (req, res) => {
                         url: details.committer.html_url,
                         icon_url: details.committer.avatar_url
                     },
+                    title: `[#${body.buildNr}] ${body.state === "pass" ? "passed" : "failed"} `,
                     url: body.buildUrl,
                     color: body.state === "pass" ? settings.colors.pass : settings.colors.fail,
-                    description: `Build: \`${body.state}\`\n` +
-                        `Nr: \`${body.buildNr}\`\n` +
-                        `Commit: [${body.commit.substring(0, 6)}](${details.commit.url})\n` +
-                        `Branch: \`${body.branch}\``
+                    fields: [
+                        {
+                            name: "Commit",
+                            value: `[${body.commit.substring(0, 6)}](${details.commit.url})`,
+                            inline: true
+                        },
+                        {
+                            name: "Branch",
+                            value: `[${body.branch}](${details.repository.html_url}/tree/${body.branch})`,
+                            inline: true
+                        }
+                    ]
                 }
             ]
         });
