@@ -1,4 +1,5 @@
 export interface HashItem {
+    html_url: string;
     commit: {
         url: string;
         message: string;

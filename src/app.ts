@@ -1,6 +1,7 @@
 import express from "express";
-import settings from "./settings"
 import axios from "axios";
+import settings from "./settings"
+import Response from "./Response";
 import { Client } from "eris";
 import { JitCIBody } from "./JitCIBody";
 import { HashDetails, HashItem } from "./HashDetails";
@@ -27,32 +28,32 @@ server.set("env", settings.env);
 server.use(express.json());
 
 server.get("/", (_, res) => {
-    res.status(200).json({
+    res.status(200).json(Response({
         statusCode: 200,
         statusMessage: "OK",
         message: "Welcome, this is an application to show JitCI's results in a discord webhook message. To use this add https://jitci.herokuapp.com/<discord-webhook-id>/<discord-webhook-token> to the JitCI settings."
-    });
+    }));
 });
 
 server.post("/:id/:token", async (req, res) => {
     const webhookId = req.params.id;
     const webhookToken = req.params.token;
     if (!webhookId || !webhookToken) {
-        return res.status(400).json({
+        return res.status(400).json(Response({
             statusCode: 400,
             statusMessage: "Bad Request",
             message: "Missing or invalid webhookId/webhookToken"
-        });
+        }));
     }
 
     const body = req.body as JitCIBody
     try {
         const details = await getHashDetails(body.commit);
-        if (!details) return res.status(500).json({
+        if (!details) return res.status(500).json(Response({
             statusCode: 500,
             statusMessage: "Internal Server Error",
             message: "Oops, something bad happened"
-        });
+        }));
         await client.executeWebhook(webhookId, webhookToken, {
             avatarURL: settings.avatar,
             embeds: [
@@ -68,7 +69,7 @@ server.post("/:id/:token", async (req, res) => {
                     fields: [
                         {
                             name: "Commit",
-                            value: `[${body.commit.substring(0, 6)}](${details.commit.url})`,
+                            value: `[${body.commit.substring(0, 6)}](${details.html_url})`,
                             inline: true
                         },
                         {
@@ -80,22 +81,26 @@ server.post("/:id/:token", async (req, res) => {
                 }
             ]
         });
-        res.sendStatus(200);
+        res.status(200).json(Response({
+            statusCode: 200,
+            statusMessage: "OK",
+            message: "Executed webhook successfully"
+        }));
     } catch (error) {
-        res.status(500).json({
+        res.status(500).json(Response({
             statusCode: 500,
             statusMessage: "Internal Server Error",
             message: error.message || "Oops, something bad happened"
-        });
+        }));
     }
 });
 
 server.get("*", (_, res) => {
-    res.status(404).json({
+    res.status(404).json(Response({
         statusCode: 404,
         statusMessage: "Not Found",
         message: "The page you are looking for does not exist"
-    });
+    }));
 });
 
 server.listen(port, () => {
