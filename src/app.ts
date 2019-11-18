@@ -63,7 +63,7 @@ server.post("/:id/:token", async (req, res) => {
                         url: details.committer.html_url,
                         icon_url: details.committer.avatar_url
                     },
-                    title: `[#${body.buildNr}] ${body.state === "pass" ? "passed" : "failed"} `,
+                    title: `[#${body.buildNr}] ${body.state === "pass" ? "passed" : "failed"} - ${details.repository.full_name}`,
                     url: body.buildUrl,
                     color: body.state === "pass" ? settings.colors.pass : settings.colors.fail,
                     fields: [
